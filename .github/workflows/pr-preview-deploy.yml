@@ -61,8 +61,8 @@ jobs:
               issue_number: issue_number,
               body: 'Everything is OK. Thank you for the PR!'
             });
-      - name: Post URL as PR comment
-        uses: mshick/add-pr-comment@v2
-        with:
-          message: "🚀 Deployed Preview: http://${{steps.surge-url.outputs.result}} ✨"
-          github-token: ${{ secrets.GITHUB_BOT_TOKEN }}
+      # - name: Post URL as PR comment
+      #   uses: mshick/add-pr-comment@v2
+      #   with:
+      #     message: "🚀 Deployed Preview: http://${{steps.surge-url.outputs.result}} ✨"
+      #     github-token: ${{ secrets.GITHUB_BOT_TOKEN }}
