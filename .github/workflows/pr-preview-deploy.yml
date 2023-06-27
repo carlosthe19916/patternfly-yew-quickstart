@@ -84,5 +84,5 @@ jobs:
         uses: mshick/add-pr-comment@v2
         with:
           message: "🚀 Deployed Preview: http://${{steps.surge-url.outputs.result}} ✨"
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
           issue: ${{steps.issue_number.outputs.result}}
