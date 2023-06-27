@@ -71,19 +71,19 @@ jobs:
       - name: Deploy to Surge
         run: surge ./dist/ "${{steps.surge-url.outputs.result}}" --token ${{ secrets.SURGE_TOKEN }}
 
-      - name: Post URL as PR comment
-        uses: actions/github-script@v3
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            var fs = require('fs');
-            const issue_number = Number(fs.readFileSync('./NR'));
-            await github.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: issue_number,
-              body: 'Everything is OK. Thank you for the PR!'
-            });
+      # - name: Post URL as PR comment
+      #   uses: actions/github-script@v3
+      #   with:
+      #     github-token: ${{ secrets.GITHUB_TOKEN }}
+      #     script: |
+      #       var fs = require('fs');
+      #       const issue_number = Number(fs.readFileSync('./NR'));
+      #       await github.issues.createComment({
+      #         owner: context.repo.owner,
+      #         repo: context.repo.repo,
+      #         issue_number: issue_number,
+      #         body: 'Everything is OK. Thank you for the PR!'
+      #       });
       - name: Post URL as PR comment
         uses: mshick/add-pr-comment@v2
         with:
