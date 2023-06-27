@@ -56,14 +56,23 @@ jobs:
       - run: unzip dist.zip -d dist/
       - run: unzip pr.zip
 
+      - name: Generate issue_number
+        uses: actions/github-script@v3
+        id: issue_number
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            var fs = require('fs');
+            return Number(fs.readFileSync('./NR'));
+          result-encoding: string
+
       - name: Generate Surge URL
         uses: actions/github-script@v3
         id: surge-url
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            var fs = require('fs');
-            const issue_number = Number(fs.readFileSync('./NR'));
+            const issue_number = ${{steps.issue_number.outputs.result}};
             return `patternfly-yew-quickstarts-pr-${issue_number}-preview.surge.sh`;
           result-encoding: string
       - name: Install Surge
@@ -71,36 +80,9 @@ jobs:
       - name: Deploy to Surge
         run: surge ./dist/ "${{steps.surge-url.outputs.result}}" --token ${{ secrets.SURGE_TOKEN }}
 
-      # - name: Post URL as PR comment
-      #   uses: actions/github-script@v3
-      #   with:
-      #     github-token: ${{ secrets.GITHUB_TOKEN }}
-      #     script: |
-      #       var fs = require('fs');
-      #       const issue_number = Number(fs.readFileSync('./NR'));
-      #       await github.issues.createComment({
-      #         owner: context.repo.owner,
-      #         repo: context.repo.repo,
-      #         issue_number: issue_number,
-      #         body: 'Everything is OK. Thank you for the PR!'
-      #       });
       - name: Post URL as PR comment
         uses: mshick/add-pr-comment@v2
         with:
           message: "🚀 Deployed Preview: http://${{steps.surge-url.outputs.result}} ✨"
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          issue: ${{ steps.surge-url.outputs.result }}
-      
-      - name: 'Comment on PR'
-        uses: actions/github-script@v3
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            var fs = require('fs');
-            var issue_number = Number(fs.readFileSync('./NR'));
-            await github.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: issue_number,
-              body: 'Everything is OK. Thank you for the PR!'
-            });
+          issue: ${{steps.issue_number.outputs.result}}
