@@ -1,0 +1,54 @@
+name: PR Preview Publish
+on:
+  workflow_run:
+    workflows: ["PR Preview Build"]
+    types:
+      - completed
+
+jobs:
+  deploy-pr-preview:
+    runs-on: ubuntu-latest
+    if: >
+      github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.conclusion == 'success'
+    steps:
+      - name: 'Download artifact'
+        uses: actions/github-script@v3
+        with:
+          script: |
+            var artifacts = await github.actions.listWorkflowRunArtifacts({
+               owner: context.repo.owner,
+               repo: context.repo.repo,
+               run_id: ${{github.event.workflow_run.id }},
+            });
+            var matchArtifact = artifacts.data.artifacts.filter((artifact) => {
+              return artifact.name == "dist"
+            })[0];
+            var download = await github.actions.downloadArtifact({
+               owner: context.repo.owner,
+               repo: context.repo.repo,
+               artifact_id: matchArtifact.id,
+               archive_format: 'zip',
+            });
+            var fs = require('fs');
+            fs.writeFileSync('${{github.workspace}}/dist.zip', Buffer.from(download.data));
+      - run: unzip dist.zip
+
+      - name: Generate Surge URL
+        uses: actions/github-script@v3
+        id: surge-url
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const { issue: { number: issue_number } } = context;
+            return `patternfly-yew-quickstarts-pr-${issue_number}-preview.surge.sh`;
+          result-encoding: string
+      - name: Install Surge
+        run: npm install -g surge
+      - name: Deploy to Surge
+        run: surge ./dist/ "${{steps.surge-url.outputs.result}}" --token ${{ secrets.SURGE_TOKEN }}
+      - name: Post URL as PR comment
+        uses: mshick/add-pr-comment@v2
+        with:
+          message: "🚀 Deployed Preview: http://${{steps.surge-url.outputs.result}} ✨"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
