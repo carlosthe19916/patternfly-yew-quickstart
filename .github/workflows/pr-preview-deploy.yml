@@ -1,4 +1,4 @@
-name: PR Preview Publish
+name: PR Preview Deploy
 on:
   workflow_run:
     workflows: ["PR Preview Build"]
@@ -47,8 +47,22 @@ jobs:
         run: npm install -g surge
       - name: Deploy to Surge
         run: surge ./dist/ "${{steps.surge-url.outputs.result}}" --token ${{ secrets.SURGE_TOKEN }}
+      
+      - name: Post URL as PR comment
+        uses: actions/github-script@v3
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            var fs = require('fs');            
+            const { issue: { number: issue_number } } = context;           
+            await github.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issue_number,
+              body: 'Everything is OK. Thank you for the PR!'
+            });
       - name: Post URL as PR comment
         uses: mshick/add-pr-comment@v2
         with:
           message: "🚀 Deployed Preview: http://${{steps.surge-url.outputs.result}} ✨"
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.GITHUB_BOT_TOKEN }}
