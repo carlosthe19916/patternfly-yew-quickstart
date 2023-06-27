@@ -62,6 +62,7 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
+            var fs = require('fs');
             const issue_number = Number(fs.readFileSync('./NR'));
             return `patternfly-yew-quickstarts-pr-${issue_number}-preview.surge.sh`;
           result-encoding: string
